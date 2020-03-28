@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import _ from "lodash";
 import { coordinatesByCountry } from "./coordinates_data";
 import styled from "styled-components";
-
+import "./App.css";
 function getTooltipContent(marker) {
   return `Country: ${marker.country_name}
   (Total Cases: ${marker.value})`;
@@ -18,20 +18,30 @@ const fetchParams = {
   }
 };
 
-const apiURL =
+const countryApi =
   "https://coronavirus-monitor.p.rapidapi.com/coronavirus/cases_by_country.php";
+
+const worldAPI =
+  "https://coronavirus-monitor.p.rapidapi.com/coronavirus/worldstat.php";
 
 function App() {
   const [markers, setMarkers] = useState([]);
+  const [worldData, setWorldData] = useState(null);
   const [event, setEvent] = useState(null);
   const [details, setDetails] = useState(null);
-
+  const [timer, setTimer] = useState(0);
   useEffect(() => {
     async function fetchMarkerData(params) {
       try {
-        const response = await fetch(apiURL, fetchParams).then(res =>
+        const response = await fetch(countryApi, fetchParams).then(res =>
           res.json()
         );
+        const worldDataRes = await fetch(worldAPI, fetchParams).then(res =>
+          res.json()
+        );
+        if (!_.worldDataRes) {
+          setWorldData(worldDataRes);
+        }
         if (response?.countries_stat?.length) {
           const country_list = _.map(response.countries_stat, "country_name");
           const finalArray = _.map(country_list, (country, index) => {
@@ -73,57 +83,127 @@ function App() {
     setDetails(null);
   }
 
+  useEffect(() => {
+    if (timer < 5) {
+      setTimeout(() => {
+        setTimer(t => t + 1);
+      }, 1000);
+    }
+  }, [timer]);
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <ReactGlobe
-        markers={markers}
-        globeOptions={{
-          glowCoefficient: 0.1,
-          glowColor: "rgb(3,152,244)",
-          glowPower: 7,
-          glowRadiusScale: 0.5,
-          enableGlow: true,
-          cloudsOpacity: 0.8,
-          enableClouds: true
-        }}
-        markerOptions={{
-          getTooltipContent,
-          enterEasingFunction: ["Bounce", "InOut"],
-          exitAnimationDuration: 3000,
-          exitEasingFunction: ["Cubic", "Out"]
-        }}
-        onClickMarker={onClickMarker}
-        onDefocus={onDefocus}
-      />
-      {details ? (
-        <CardContainer>
-          <Card>
-            <CardHeading>{details.country_name}</CardHeading>
-            <List>
-              <ListItem>
-                <ListKey>Total Cases:</ListKey>
-                <ListValue>{details.cases}</ListValue>
+      {(!worldData || !markers.length) && (
+        <div style={{ width: "100vw", height: "100vh" }}>
+          <div class="loading">Loading&#8230;</div>
+        </div>
+      )}
+      <header id="main-header" className="add-padding border-top-color2">
+        {worldData && (
+          <div className="container">
+            <p className="text-center bold">COVID-19 COUNTRY BREAKDOWN</p>
+            <div
+              className="small"
+              style={{
+                display: "flex",
+                justifyContent: "space-evenly",
+                width: "100vw"
+              }}
+            >
+              <ListItem style={{ flexDirection: "column" }} marginBottom={0}>
+                <ListKey white>Total Cases:</ListKey>
+                <ListValue style={{ textAlign: "center" }} white>
+                  {worldData.total_cases}
+                </ListValue>
               </ListItem>
-              <ListItem>
-                <ListKey>New Cases:</ListKey>
-                <ListValue>{details.new_cases}</ListValue>
+              <ListItem style={{ flexDirection: "column" }} marginBottom={0}>
+                <ListKey white>Total Deaths:</ListKey>
+                <ListValue style={{ textAlign: "center" }} white>
+                  {worldData.total_deaths}
+                </ListValue>
               </ListItem>
-              <ListItem>
-                <ListKey>Active Cases:</ListKey>
-                <ListValue>{details.active_cases}</ListValue>
+              <ListItem style={{ flexDirection: "column" }} marginBottom={0}>
+                <ListKey white>Total Recovered:</ListKey>
+                <ListValue style={{ textAlign: "center" }} white>
+                  {worldData.total_recovered}
+                </ListValue>
               </ListItem>
-              <ListItem>
-                <ListKey>Total Deaths:</ListKey>
-                <ListValue>{details.deaths}</ListValue>
+              <ListItem style={{ flexDirection: "column" }} marginBottom={0}>
+                <ListKey white>New Cases:</ListKey>
+                <ListValue style={{ textAlign: "center" }} white>
+                  {worldData.new_cases}
+                </ListValue>
               </ListItem>
-              <ListItem marginBottom={0}>
-                <ListKey>New Deaths:</ListKey>
-                <ListValue>{details.new_deaths}</ListValue>
+              <ListItem style={{ flexDirection: "column" }} marginBottom={0}>
+                <ListKey white>New Deaths:</ListKey>
+                <ListValue style={{ textAlign: "center" }} white>
+                  {worldData.new_deaths}
+                </ListValue>
               </ListItem>
-            </List>
-          </Card>
-        </CardContainer>
-      ) : null}
+            </div>
+          </div>
+        )}
+      </header>
+      <div style={{ width: "100vw", height: "80vh" }}>
+        <ReactGlobe
+          markers={markers}
+          globeOptions={{
+            glowCoefficient: 0.1,
+            glowColor: "rgb(3,152,244)",
+            glowPower: 7,
+            glowRadiusScale: 0.5,
+            enableGlow: true,
+            cloudsOpacity: 0.8,
+            enableClouds: true
+          }}
+          markerOptions={{
+            getTooltipContent,
+            enterEasingFunction: ["Bounce", "InOut"],
+            exitAnimationDuration: 3000,
+            exitEasingFunction: ["Cubic", "Out"]
+          }}
+          onClickMarker={onClickMarker}
+          onDefocus={onDefocus}
+        />
+        {details ? (
+          <CardContainer>
+            <Card>
+              <CardHeading>{details.country_name}</CardHeading>
+              <List>
+                <ListItem>
+                  <ListKey>Total Cases:</ListKey>
+                  <ListValue>{details.cases}</ListValue>
+                </ListItem>
+                <ListItem>
+                  <ListKey>New Cases:</ListKey>
+                  <ListValue>{details.new_cases}</ListValue>
+                </ListItem>
+                <ListItem>
+                  <ListKey>Active Cases:</ListKey>
+                  <ListValue>{details.active_cases}</ListValue>
+                </ListItem>
+                <ListItem>
+                  <ListKey>Total Recovered:</ListKey>
+                  <ListValue>{details.total_recovered}</ListValue>
+                </ListItem>
+                <ListItem>
+                  <ListKey>Total Deaths:</ListKey>
+                  <ListValue>{details.deaths}</ListValue>
+                </ListItem>
+                <ListItem marginBottom={0}>
+                  <ListKey>New Deaths:</ListKey>
+                  <ListValue>{details.new_deaths}</ListValue>
+                </ListItem>
+              </List>
+            </Card>
+          </CardContainer>
+        ) : null}
+        <footer id="main-footer" className="add-padding border-top-color2">
+          <div className="container">
+            <p className="text-center last">Built By Akhil Mulpuri.</p>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
@@ -135,9 +215,11 @@ const List = styled.ul`
 const ListKey = styled.span`
   font-family: Montserrat, sans-serif;
   font-weight: 600;
+  color: ${({ white }) => (white ? "white" : "black")};
 `;
 const ListValue = styled.span`
   font-family: Montserrat, sans-serif;
+  color: ${({ white }) => (white ? "white" : "black")};
 `;
 const ListItem = styled.li`
   display: flex;
