@@ -3,6 +3,7 @@ import ReactGlobe from "react-globe";
 import { useEffect } from "react";
 import _ from "lodash";
 import { coordinatesByCountry } from "./coordinates_data";
+import styled from "styled-components";
 
 function getTooltipContent(marker) {
   return `Country: ${marker.country_name}
@@ -53,6 +54,7 @@ function App() {
     }
     fetchMarkerData();
   }, []);
+
   function onClickMarker(marker, markerObject, event) {
     setEvent({
       type: "CLICK",
@@ -60,7 +62,7 @@ function App() {
       markerObjectID: markerObject.uuid,
       pointerEventPosition: { x: event.clientX, y: event.clientY }
     });
-    setDetails(getTooltipContent(marker));
+    setDetails(marker);
   }
   function onDefocus(previousCoordinates, event) {
     setEvent({
@@ -85,13 +87,84 @@ function App() {
           enableClouds: true
         }}
         markerOptions={{
-          getTooltipContent
+          getTooltipContent,
+          enterEasingFunction: ["Bounce", "InOut"],
+          exitAnimationDuration: 3000,
+          exitEasingFunction: ["Cubic", "Out"]
         }}
         onClickMarker={onClickMarker}
         onDefocus={onDefocus}
       />
+      {details ? (
+        <CardContainer>
+          <Card>
+            <CardHeading>{details.country_name}</CardHeading>
+            <List>
+              <ListItem>
+                <ListKey>Total Cases:</ListKey>
+                <ListValue>{details.cases}</ListValue>
+              </ListItem>
+              <ListItem>
+                <ListKey>New Cases:</ListKey>
+                <ListValue>{details.new_cases}</ListValue>
+              </ListItem>
+              <ListItem>
+                <ListKey>Active Cases:</ListKey>
+                <ListValue>{details.active_cases}</ListValue>
+              </ListItem>
+              <ListItem>
+                <ListKey>Total Deaths:</ListKey>
+                <ListValue>{details.deaths}</ListValue>
+              </ListItem>
+              <ListItem marginBottom={0}>
+                <ListKey>New Deaths:</ListKey>
+                <ListValue>{details.new_deaths}</ListValue>
+              </ListItem>
+            </List>
+          </Card>
+        </CardContainer>
+      ) : null}
     </div>
   );
 }
+
+const List = styled.ul`
+  list-style: none;
+  padding: 0px;
+`;
+const ListKey = styled.span`
+  font-family: Montserrat, sans-serif;
+  font-weight: 600;
+`;
+const ListValue = styled.span`
+  font-family: Montserrat, sans-serif;
+`;
+const ListItem = styled.li`
+  display: flex;
+  margin-bottom: ${({ marginBottom }) => (marginBottom ? marginBottom : 10)};
+  justify-content: space-between;
+`;
+const CardHeading = styled.h1`
+  font-family: Montserrat, sans-serif;
+  margin: 0;
+`;
+
+const CardContainer = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translate(-50%, -50%);
+`;
+
+const Card = styled.div`
+  background-color: white;
+  width: 30vw;
+  max-height: 50vh;
+  border-radius: 10px;
+  padding: 25px;
+`;
 
 export default App;

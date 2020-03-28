@@ -11,6 +11,7 @@
     "react-dom": "^16.13.1",
     "react-globe": "^4.0.0",
     "react-scripts": "3.4.1",
+    "styled-components": "^5.0.1",
     "three": "^0.115.0",
     "unirest": "^0.6.0"
   },
